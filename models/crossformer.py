@@ -161,10 +161,9 @@ class Attention(nn.Module):
         if self.position_bias:
             if self.use_dynamic_pos_bias:
                 pos = self.pos(self.biases) # 2Wh-1 * 2Ww-1, heads
-                
-                # if not self.init_rpb:
-                #     self.rpb.relative_position_bias_table.data = pos
-                #     self.init_rpb = True
+                if not self.init_rpb:
+                    self.rpb.relative_position_bias_table.data = pos
+                    self.init_rpb = True
                 
                 if self.first_time_log:
                     print(f'using dynamic position bias')

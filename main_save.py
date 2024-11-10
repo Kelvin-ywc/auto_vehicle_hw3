@@ -80,8 +80,6 @@ def parse_option():
     parser.add_argument('--no_mask', action='store_true', help='whether to use mask after padding')
     parser.add_argument('--adaptive_interval', action='store_true', help='interval change with the group size')
     parser.add_argument('--use_dpb', action='store_true', help='whether to use dynamic positional bias')
-    parser.add_argument('--amp_opt_level', type=str, default='native', choices=['native', 'O0', 'O1', 'O2'],
-                        help='mixed precision opt level, if O0, no amp is used')
     args, unparsed = parser.parse_known_args()
 
     config = get_config(args)
@@ -169,13 +167,9 @@ def main(args, config):
             save_checkpoint(config, epoch, model_without_ddp, max_accuracy, optimizer, lr_scheduler, logger)
         if config.DATA.DATASET != "ImageNet22K" or epoch % 10 == 0 or epoch == config.TRAIN.EPOCHS - 1:
             acc1, acc5, loss = validate(config, data_loader_val, model, epoch)
-            logger.info(f"Accuracy of the network on the {len(dataset_val)} test images: {acc1:.1f}%")
-            if dist.get_rank() == 0 and acc1 >= max_accuracy: ## save best
-                save_checkpoint(config, epoch, model_without_ddp, max_accuracy, optimizer, lr_scheduler, logger, best=True)
-            if dist.get_rank() == 0:
-                save_checkpoint(config, epoch, model_without_ddp, max_accuracy, optimizer, lr_scheduler, logger, last=True)
-            max_accuracy = max(max_accuracy, acc1)
-            logger.info(f'Epoch: {epoch:d}, Max accuracy: {max_accuracy:.2f}%')
+            save_checkpoint(config, epoch, model_without_ddp, max_accuracy, optimizer, lr_scheduler, logger)
+            exit(0)
+
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
@@ -289,34 +283,8 @@ def validate(config, data_loader, model, epoch=0):
         # compute output
         with torch.cuda.amp.autocast(enabled=(config.AMP_OPT_LEVEL=="native")):
             output = model(images)
+            return
 
-            # measure accuracy and record loss
-            loss = criterion(output, target)
-
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))
-
-        acc1 = reduce_tensor(acc1)
-        acc5 = reduce_tensor(acc5)
-        loss = reduce_tensor(loss)
-
-        loss_meter.update(loss.item(), target.size(0))
-        acc1_meter.update(acc1.item(), target.size(0))
-        acc5_meter.update(acc5.item(), target.size(0))
-
-        # measure elapsed time
-        batch_time.update(time.time() - end)
-        end = time.time()
-
-        if idx % config.PRINT_FREQ == 0 or idx == len(data_loader) - 1:
-            memory_used = torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
-            logger.info(
-                f'Test: [{idx}/{len(data_loader)}]\t'
-                f'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                f'Loss {loss_meter.val:.4f} ({loss_meter.avg:.4f})\t'
-                f'Epoch {epoch:d}\t'
-                f'Acc@1 {acc1_meter.val:.3f} ({acc1_meter.avg:.3f})\t'
-                f'Acc@5 {acc5_meter.val:.3f} ({acc5_meter.avg:.3f})\t'
-                f'Mem {memory_used:.0f}MB')
     logger.info(f' * Acc@1 {acc1_meter.avg:.3f} Acc@5 {acc5_meter.avg:.3f}')
     return acc1_meter.avg, acc5_meter.avg, loss_meter.avg
 

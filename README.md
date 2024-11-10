@@ -62,6 +62,22 @@ python -u -m torch.distributed.launch --nproc_per_node 1 main.py --cfg configs/c
 ![Alt text](image-6.png)
 
 对于相对位置偏置的实验日志保存在`output/log/debug/log_rank0_rpb.txt`中
+
 ![Alt text](image-7.png)
 
-可以看到最终结果是一样的.
+我们发现,精度有些许不一样,这是使用自动混合精度AMP导致的.
+设置config.AMP_OPT_LEVEL为O0, 运行以下指令:
+```
+# inference without amp dpb weight
+python -u -m torch.distributed.launch --nproc_per_node 1 main.py --cfg configs/crossformer/tiny_patch4_group7_224.yaml \
+--batch-size 128 --data-path /home1/yanweicai/DATA/tta/clip_based_adaptation/imagenet --eval --resume ./model_ckpt/crossformer-t.pth --use_dpb --amp_opt_level O0
+
+# inference without amp rpb weight
+python -u -m torch.distributed.launch --nproc_per_node 1 main.py --cfg configs/crossformer/tiny_patch4_group7_224.yaml \
+--batch-size 128 --data-path /home1/yanweicai/DATA/tta/clip_based_adaptation/imagenet --eval --resume ./model_ckpt/cros_tiny_patch4_group7_224_rpb.pth --amp_opt_level O0
+```
+对于动态位置偏置的实验日志保存在`output/log/debug/log_rank0_dpb_wo_amp.txt`
+
+对于相对位置偏置的实验日志保存在`output/log/debug/log_rank0_rpb_wo_amp.txt`
+
+最终结果一致.

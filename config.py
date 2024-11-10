@@ -246,7 +246,9 @@ def update_config(config, args):
         config.THROUGHPUT_MODE = True
     if args.embed_dim:
         config.MODEL.CROS.EMBED_DIM = args.embed_dim
-
+    if args.amp_opt_level:
+        config.AMP_OPT_LEVEL = args.amp_opt_level
+        
     config.MODEL.CROS.USE_DPB = args.use_dpb
 
     # if args.patch_size:
