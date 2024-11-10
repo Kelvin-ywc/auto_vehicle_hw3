@@ -1,4 +1,4 @@
-output
+# output
 *.json
 __pycache__
 train.sh
