@@ -111,8 +111,9 @@ def main(args, config):
         images = images.cuda(non_blocking=True)
 
         # compute output
-        with torch.cuda.amp.autocast(enabled=(config.AMP_OPT_LEVEL=="native")):
-            model(images)
+        # with torch.cuda.amp.autocast(enabled=(config.AMP_OPT_LEVEL=="native")):
+        model(images)
+        
         to_save = {'model': model.state_dict()}
         torch.save(to_save, os.path.join('model_ckpt', f'{config.MODEL.NAME}_rpb.pth'))
 

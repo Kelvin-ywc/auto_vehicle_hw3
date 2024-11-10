@@ -66,6 +66,10 @@ python -u -m torch.distributed.launch --nproc_per_node 1 main.py --cfg configs/c
 ![Alt text](assets/image-7.png)
 
 我们发现,精度有些许不一样,这是使用自动混合精度AMP导致的.
+修改保存权重脚本:
+
+![Alt text](assets/image11.png)
+
 设置config.AMP_OPT_LEVEL为O0, 运行以下指令:
 ```
 # inference without amp dpb weight
@@ -82,6 +86,6 @@ python -u -m torch.distributed.launch --nproc_per_node 1 main.py --cfg configs/c
 
 对于相对位置偏置的实验日志保存在`output/log/debug/log_rank0_rpb_wo_amp.txt`
 
-![Alt text](assets/image-9.png)
+![Alt text](assets/image10.png)
 
 最终结果一致.
