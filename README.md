@@ -45,7 +45,7 @@ CrossFormer -> Stage -> CrossFormerBlock -> Attention
 
 ![Alt text](image-5.png)
 
-此时,模型权重已转换完成.
+此时,模型权重已转换完成. 注释掉rpb赋值语句.
 
 7. 模型推理验证精度, 执行以下指令
 ```
@@ -57,4 +57,11 @@ python -u -m torch.distributed.launch --nproc_per_node 1 main.py --cfg configs/c
 python -u -m torch.distributed.launch --nproc_per_node 1 main.py --cfg configs/crossformer/tiny_patch4_group7_224.yaml \
 --batch-size 128 --data-path /home1/yanweicai/DATA/tta/clip_based_adaptation/imagenet --eval --resume ./model_ckpt/cros_tiny_patch4_group7_224_rpb.pth 
 ```
-日志文件分别保存在
+对于动态位置偏置的实验日志保存在`output/log/debug/log_rank0_dpb.txt`
+
+![Alt text](image-6.png)
+
+对于相对位置偏置的实验日志保存在`output/log/debug/log_rank0_rpb.txt`中
+![Alt text](image-7.png)
+
+可以看到最终结果是一样的.
