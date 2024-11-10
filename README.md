@@ -16,34 +16,34 @@ Swin Transformer会维护一个形状为[9, 1]的表格table,表格中的第一�
 - self.init_rpb: 用于给相对位置偏置赋值,为True时给相对位置偏置赋值,为False时不赋值
 - self.first_time_log: 用于在推理第一个batch图片时打印使用哪种偏置
 
-![Alt text](image.png)
+![Alt text](assets/image.png)
 
 2. 定义相对位置偏置类
 RelativePosBias类中包含一个偏置表
 
-![Alt text](image-2.png)
+![Alt text](assets/image-2.png)
 
 3. 给Attention类添加rpb属性
 
-![Alt text](image-1.png)
+![Alt text](assets/image-1.png)
 
 4. 修改Attention forward函数
 当self.use_dynamic_pos_bias设置为true时,pos设置为动态位置,并将动态位置偏置网络的输出赋值给相对位置编码,整个过程相对位置偏置不参与运算,仅用于保存新的权重.
 
 当self.use_dynamic_pos_bias设置为false时,pos设置为相对位置偏置,整个前向过程则不包括动态位置偏置.
 
-![Alt text](image-3.png)
+![Alt text](assets/image-3.png)
 
 5. 在main.py添加参数, use_dpb,该参数通过以下链路传给Attention类.
 
-![Alt text](image-4.png)
+![Alt text](assets/image-4.png)
 ```
 CrossFormer -> Stage -> CrossFormerBlock -> Attention
 ```
 
 6. 新写一个save_rpb_weight.py类,执行一次前向过程, 保存相对位置偏置权重到`model_ckpt`目录下.
 
-![Alt text](image-5.png)
+![Alt text](assets/image-5.png)
 
 此时,模型权重已转换完成. 注释掉rpb赋值语句.
 
@@ -59,11 +59,11 @@ python -u -m torch.distributed.launch --nproc_per_node 1 main.py --cfg configs/c
 ```
 对于动态位置偏置的实验日志保存在`output/log/debug/log_rank0_dpb.txt`
 
-![Alt text](image-6.png)
+![Alt text](assets/image-6.png)
 
 对于相对位置偏置的实验日志保存在`output/log/debug/log_rank0_rpb.txt`中
 
-![Alt text](image-7.png)
+![Alt text](assets/image-7.png)
 
 我们发现,精度有些许不一样,这是使用自动混合精度AMP导致的.
 设置config.AMP_OPT_LEVEL为O0, 运行以下指令:
@@ -78,6 +78,10 @@ python -u -m torch.distributed.launch --nproc_per_node 1 main.py --cfg configs/c
 ```
 对于动态位置偏置的实验日志保存在`output/log/debug/log_rank0_dpb_wo_amp.txt`
 
+![Alt text](assets/image-8.png)
+
 对于相对位置偏置的实验日志保存在`output/log/debug/log_rank0_rpb_wo_amp.txt`
+
+![Alt text](assets/image-9.png)
 
 最终结果一致.
